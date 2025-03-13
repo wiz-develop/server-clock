@@ -1,4 +1,5 @@
 import { type ClockData, type ClockTickHandler, type ServerClockOptions } from '../core/types';
+import { getWorkerUrl } from './createInlineWorker';
 
 /**
  * WebWorkerを使用した時計プロキシ
@@ -16,7 +17,8 @@ export class WorkerProxy {
    */
   constructor(options: ServerClockOptions, workerUrl = './worker.js') {
     this.options = options;
-    this.workerUrl = workerUrl;
+    // 環境に応じて適切なWorker URLを取得
+    this.workerUrl = getWorkerUrl(workerUrl);
   }
 
   /**
@@ -24,7 +26,6 @@ export class WorkerProxy {
    */
   public onTick(handler: ClockTickHandler): () => void {
     this.tickHandlers.add(handler);
-
     // 登録解除用の関数を返す
     return () => {
       this.tickHandlers.delete(handler);
@@ -68,11 +69,9 @@ export class WorkerProxy {
       this.worker.postMessage({
         type: 'stop',
       });
-
       // イベントリスナーを削除
       this.worker.removeEventListener('message', this.handleWorkerMessage);
       this.worker.removeEventListener('error', WorkerProxy.handleWorkerError);
-
       // Workerを終了
       this.worker.terminate();
       this.worker = null;
