@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@wiz-develop/server-clock Demo</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial,
+          sans-serif;
+        margin: 0;
+        padding: 20px;
+        line-height: 1.6;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        text-align: center;
+        color: #333;
+      }
+      .clock-display {
+        font-size: 2rem;
+        text-align: center;
+        padding: 20px;
+        margin: 20px 0;
+        background: #f5f5f5;
+        border-radius: 5px;
+      }
+      .time-info {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+      }
+      .time-card {
+        flex: 1;
+        min-width: 200px;
+        padding: 15px;
+        background: #fff;
+        border: 1px solid #eee;
+        border-radius: 4px;
+        box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
+      }
+      .time-label {
+        font-weight: bold;
+        color: #555;
+        margin-bottom: 5px;
+      }
+      .time-value {
+        font-family: monospace;
+        font-size: 1.1rem;
+      }
+      .status {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 0.9rem;
+        color: #666;
+      }
+      .btn {
+        background: #4a6fff;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin: 0 5px;
+      }
+      .btn:hover {
+        background: #3a5fee;
+      }
+      .btn-group {
+        text-align: center;
+        margin: 20px 0;
+      }
+      .server-url {
+        width: 100%;
+        padding: 8px;
+        margin: 10px 0;
+        box-sizing: border-box;
+      }
+      .note {
+        background-color: #fff8e1;
+        padding: 10px;
+        border-left: 4px solid #ffca28;
+        margin: 15px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>@wiz-develop/server-clock デモ</h1>
+
+      <div class="note">
+        <strong>注意:</strong>
+        このデモを正しく動作させるには、ローカルサーバーを使用してアクセスしてください。
+        <code>file://</code>プロトコルではブラウザのセキュリティ制限によりWebWorkerが動作しません。
+        <br />
+        <br />
+        以下のコマンドでシンプルなHTTPサーバーを起動できます:
+        <br />
+        <code>cd packages/@wiz-develop/server-clock && npx http-server -o ./examples/vanilla/</code>
+      </div>
+
+      <div class="clock-display" id="main-time">--:--:--</div>
+
+      <div class="time-info">
+        <div class="time-card">
+          <div class="time-label">UTC 時間</div>
+          <div class="time-value" id="utc-time">--:--:--</div>
+        </div>
+        <div class="time-card">
+          <div class="time-label">日本時間 (JST)</div>
+          <div class="time-value" id="jst-time">--:--:--</div>
+        </div>
+        <div class="time-card">
+          <div class="time-label">ローカル時間</div>
+          <div class="time-value" id="local-time">--:--:--</div>
+        </div>
+      </div>
+
+      <div class="status">
+        <div>同期ステータス: <span id="sync-status">pending</span></div>
+        <div>オフセット: <span id="offset">0.0</span> 秒</div>
+        <div>実行モード: <span id="worker-mode">確認中...</span></div>
+      </div>
+
+      <div class="btn-group">
+        <button id="start-btn" class="btn">時計開始</button>
+        <button id="stop-btn" class="btn">時計停止</button>
+      </div>
+
+      <div>
+        <p>時刻配信サーバーURL</p>
+        <input
+          type="text"
+          id="server-url"
+          class="server-url"
+          value="https://stg-entrant-seminar.zenko-sai.or.jp/server_time"
+          aria-label="時刻配信サーバーURL"
+        />
+        <p>
+          <small
+            >*
+            実際の時計サーバーとはレスポンス形式が異なるため、内部でダミーレスポンスを生成しています</small
+          >
+        </p>
+      </div>
+    </div>
+
+    <!-- ライブラリを読み込み -->
+    <script src="../../dist/bundle.js" defer></script>
+
+    <script>
+      // ダミーの時刻配信サーバーを使用するためのFetchをインターセプト
+      const originalFetch = window.fetch;
+      window.fetch = function (url, options) {
+        // WorldTimeAPIの使用時に実際のネットワークリクエストをスキップし、即座にダミーレスポンスを返す
+        if (url.includes('worldtimeapi.org')) {
+          console.log(`[MockFetch] インターセプト: ${url}`);
+          // 即座にモックレスポンスを返す（APIリクエストなし）
+          return Promise.resolve({
+            json: () =>
+              Promise.resolve({
+                requestReceivedAt: Date.now() - 50, // 仮想的なリクエスト受信時刻
+                responseSentAt: Date.now(), // 仮想的なレスポンス送信時刻
+              }),
+          });
+        }
+        return originalFetch(url, options);
+      };
+
+      // DOM要素への参照
+      const mainTimeEl = document.getElementById('main-time');
+      const utcTimeEl = document.getElementById('utc-time');
+      const jstTimeEl = document.getElementById('jst-time');
+      const localTimeEl = document.getElementById('local-time');
+      const syncStatusEl = document.getElementById('sync-status');
+      const offsetEl = document.getElementById('offset');
+      const workerModeEl = document.getElementById('worker-mode');
+      const startBtn = document.getElementById('start-btn');
+      const stopBtn = document.getElementById('stop-btn');
+      const serverUrlInput = document.getElementById('server-url');
+
+      // ServerClockインスタンスを作成
+      let clock = null;
+
+      // file://プロトコルでアクセスされているかをチェック
+      const isFileProtocol = window.location.protocol === 'file:';
+
+      // 時計を初期化
+      function initClock() {
+        if (clock) {
+          clock.stop();
+        }
+
+        const serverUrl = serverUrlInput.value.trim();
+        if (!serverUrl) {
+          alert('サーバーURLを入力してください');
+          return;
+        }
+
+        // file://プロトコルの場合は強制的にメインスレッドモードで実行
+        const forceSingleThread = isFileProtocol;
+
+        // worker.jsのパスを正確に指定（相対パス解決の問題を回避）
+        const workerUrl = new URL('../../dist/worker.js', window.location.href).href;
+
+        clock = new WizDevelopServerClock.ServerClock(
+          {
+            serverUrls: [serverUrl],
+            fetchInterval: 30000, // 30秒ごとに更新（デモ用）
+            clockInterval: 100, // 100msごとに更新（デモ用）
+          },
+          forceSingleThread,
+          workerUrl, // 明示的にworker.jsのパスを指定
+        );
+
+        // WebWorkerモードかどうかを表示
+        if (isFileProtocol) {
+          workerModeEl.textContent = 'メインスレッド (file://プロトコルのため強制)';
+        } else {
+          workerModeEl.textContent = clock.isUsingWorker()
+            ? 'WebWorker (バックグラウンド処理)'
+            : 'メインスレッド (直接実行)';
+        }
+
+        // 時計のTickイベントを監視
+        clock.onTick(updateDisplay);
+      }
+
+      // 表示を更新
+      function updateDisplay(clockData) {
+        mainTimeEl.textContent = clockData.JST_STR.split('.')[0]; // ミリ秒を除去
+        utcTimeEl.textContent = clockData.UTC_STR;
+        jstTimeEl.textContent = clockData.JST_STR;
+        localTimeEl.textContent = clockData.LOC_STR;
+
+        syncStatusEl.textContent = clockData.status;
+        offsetEl.textContent = clockData.offset;
+      }
+
+      // イベントリスナー
+      startBtn.addEventListener('click', () => {
+        if (!clock) {
+          initClock();
+        }
+        clock.start();
+      });
+
+      stopBtn.addEventListener('click', () => {
+        if (clock) {
+          clock.stop();
+        }
+      });
+
+      // 初期化
+      document.addEventListener('DOMContentLoaded', () => {
+        if (isFileProtocol) {
+          console.warn(
+            'file://プロトコルではWebWorkerが動作しません。ローカルサーバーを使用してアクセスしてください。',
+          );
+        }
+        initClock();
+      });
+    </script>
+  </body>
+</html>
