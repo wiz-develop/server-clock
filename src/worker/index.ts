@@ -2,9 +2,8 @@
  * WebWorker として動作する時計実装
  * このファイルはWebWorker環境で実行されることを想定しています
  */
-import { toDateString } from '../core/clock';
-import { fetchCalculateServerTimeOffset } from '../core/sync';
-import { type CalculatedResult, type ClockData, type ServerUrls } from '../core/types';
+import { fetchCalculateServerTimeOffset, getClockData } from '../core/sync';
+import { type CalculatedResult, type ServerUrls } from '../core/types';
 
 /**
  * このファイルは、Web Worker として動作するファイルです。
@@ -27,39 +26,12 @@ let clockloopTimer: number | null = null;
 let fetchloopTimer: number | null = null;
 
 /**
- * 時計を取得する
- */
-const getClock = (): ClockData => {
-  const now = new Date();
-  const tzOffset = now.getTimezoneOffset() * 60_000;
-
-  const utcMs = now.getTime() + result.offset + CLOCK_INTERVAL / 2;
-
-  const times = {
-    status: result.status,
-    offset: Math.round((result.offset / 1000) * 10) / 10,
-    LOCAL: new Date(now.getTime() - tzOffset),
-    JST: new Date(utcMs + 9 * 3_600_000),
-    UTC: new Date(utcMs),
-    LOC: new Date(utcMs - tzOffset),
-  };
-
-  return {
-    ...times,
-    LOCAL_STR: toDateString(times.LOCAL),
-    JST_STR: toDateString(times.JST),
-    UTC_STR: toDateString(times.UTC),
-    LOC_STR: toDateString(times.LOC),
-  };
-};
-
-/**
  * 時計を開始する
- * @param serverList 時刻配信サーバーの URL リスト
+ * @param serverUrls 時刻配信サーバーの URL リスト
  * @param fetchInterval サーバーからの時刻取得間隔(ミリ秒) ※デフォルトは3分
  */
 const startClock = async (
-  serverList: ServerUrls,
+  serverUrls: ServerUrls,
   fetchInterval: number = 1000 * 60 * 3,
 ): Promise<void> => {
   if (clockloopTimer) {
@@ -70,16 +42,16 @@ const startClock = async (
   }
 
   // サーバーとの時間オフセットを計算
-  result = await fetchCalculateServerTimeOffset(serverList, FETCH_TIMEOUT);
+  result = await fetchCalculateServerTimeOffset(serverUrls, FETCH_TIMEOUT);
 
   // 定期的にサーバー時間を取得
   fetchloopTimer = setInterval(async () => {
-    result = await fetchCalculateServerTimeOffset(serverList, FETCH_TIMEOUT, result);
+    result = await fetchCalculateServerTimeOffset(serverUrls, FETCH_TIMEOUT, result);
   }, fetchInterval);
 
   // 時計を更新して送信
   clockloopTimer = setInterval(() => {
-    const clock = getClock();
+    const clock = getClockData(result, CLOCK_INTERVAL);
     self.postMessage(clock); // メインスレッドに送信
   }, CLOCK_INTERVAL);
 };
@@ -104,11 +76,11 @@ self.addEventListener('message', async (event) => {
 
   switch (event.data.type) {
     case 'start':
-      if (event.data.serverList == null) {
-        console.error('[ServerClock Worker] serverList is required');
+      if (event.data.serverUrls == null) {
+        console.error('[ServerClock Worker] serverUrls is required');
         break;
       }
-      await startClock(event.data.serverList, event.data.fetchInterval);
+      await startClock(event.data.serverUrls, event.data.fetchInterval);
       break;
     case 'stop':
       stopClock();

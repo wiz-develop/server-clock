@@ -1,9 +1,24 @@
 import {
   type CalculatedResult,
+  type ClockData,
   type ProcessedServerResponse,
   type ServerResponse,
   type ServerUrls,
 } from './types';
+
+/**
+ * 時刻を文字列に変換する
+ */
+export const toDateString = (t: Date): string => {
+  const yy = t.getUTCFullYear();
+  const MM = (t.getUTCMonth() + 1).toString().padStart(2, '0');
+  const dd = t.getUTCDate().toString().padStart(2, '0');
+  const hh = t.getUTCHours().toString().padStart(2, '0');
+  const mm = t.getUTCMinutes().toString().padStart(2, '0');
+  const ss = t.getUTCSeconds().toString().padStart(2, '0');
+  const ms = t.getUTCMilliseconds().toString().padStart(3, '0');
+  return `${yy}/${MM}/${dd} ${hh}:${mm}:${ss}.${ms}`;
+};
 
 /**
  * タイムアウト付きで fetch する
@@ -124,4 +139,31 @@ export const fetchCalculateServerTimeOffset = async (
     .map((response) => response.value);
 
   return calculateOffset(succeedResponses, serverUrls);
+};
+
+/**
+ * 時計データを取得する
+ */
+export const getClockData = (result: CalculatedResult, clockInterval: number): ClockData => {
+  const now = new Date();
+  const tzOffset = now.getTimezoneOffset() * 60_000;
+
+  const utcMs = now.getTime() + result.offset + clockInterval / 2;
+
+  const times = {
+    status: result.status,
+    offset: Math.round((result.offset / 1000) * 10) / 10,
+    LOCAL: new Date(now.getTime() - tzOffset),
+    JST: new Date(utcMs + 9 * 3_600_000),
+    UTC: new Date(utcMs),
+    LOC: new Date(utcMs - tzOffset),
+  };
+
+  return {
+    ...times,
+    LOCAL_STR: toDateString(times.LOCAL),
+    JST_STR: toDateString(times.JST),
+    UTC_STR: toDateString(times.UTC),
+    LOC_STR: toDateString(times.LOC),
+  };
 };

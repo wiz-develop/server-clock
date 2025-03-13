@@ -50,7 +50,7 @@ export class WorkerProxy {
       // Workerに開始メッセージを送信
       this.worker.postMessage({
         type: 'start',
-        serverList: this.options.serverUrls,
+        serverUrls: this.options.serverUrls,
         fetchInterval: this.options.fetchInterval,
       });
     } catch (error) {
