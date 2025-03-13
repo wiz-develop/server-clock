@@ -4,6 +4,9 @@
  */
 
 // CoreモジュールをエクスポートしてESMでも使えるようにする
+// ブラウザ実装をエクスポート（デフォルトとして）
+
+export { ServerClock } from './browser/index';
 export { CoreClock } from './core/clock';
 export { fetchCalculateServerTimeOffset } from './core/sync';
 export {
@@ -14,8 +17,4 @@ export {
   ServerUrls,
   Status,
 } from './core/types';
-export { ServerClock };
-
-// ブラウザ実装をエクスポート（デフォルトとして）
-import { ServerClock } from './browser/index';
-export default ServerClock;
+export default './browser/index';

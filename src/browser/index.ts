@@ -1,6 +1,6 @@
 import { CoreClock } from '../core/clock';
-import { ClockData, ClockTickHandler, ServerClockOptions } from '../core/types';
-import { WorkerProxy } from './worker-proxy';
+import { type ClockData, type ClockTickHandler, type ServerClockOptions } from '../core/types';
+import { WorkerProxy } from './workerProxy';
 
 /**
  * サーバー同期時計のブラウザ実装
@@ -11,18 +11,14 @@ export class ServerClock {
   private options: ServerClockOptions;
   private useWorker: boolean;
   private lastTickData: ClockData | null = null;
-  private tickHandlers: Set<ClockTickHandler> = new Set();
+  private tickHandlers = new Set<ClockTickHandler>();
 
   /**
    * @param options サーバー時計のオプション
    * @param forceSingleThread WebWorkerが利用可能でも強制的にシングルスレッドで実行する場合はtrue
    * @param workerUrl WebWorkerのURL (デフォルト: './worker.js')
    */
-  constructor(
-    options: ServerClockOptions,
-    forceSingleThread: boolean = false,
-    workerUrl: string = './worker.js',
-  ) {
+  constructor(options: ServerClockOptions, forceSingleThread = false, workerUrl = './worker.js') {
     this.options = {
       ...options,
       fetchInterval: options.fetchInterval ?? 1000 * 60 * 3,
@@ -34,11 +30,9 @@ export class ServerClock {
     // WebWorkerが利用可能で、強制シングルスレッドでない場合はWorkerを使用
     this.useWorker = !forceSingleThread && WorkerProxy.isWorkerAvailable();
 
-    if (this.useWorker) {
-      this.implementation = new WorkerProxy(this.options, workerUrl);
-    } else {
-      this.implementation = new CoreClock(this.options);
-    }
+    this.implementation = this.useWorker
+      ? new WorkerProxy(this.options, workerUrl)
+      : new CoreClock(this.options);
 
     // 実装からの時計イベントをハンドル
     this.implementation.onTick(this.handleTick);

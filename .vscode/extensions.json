@@ -1,0 +1,13 @@
+{
+  "recommendations": [
+    "EditorConfig.EditorConfig",
+    "yusukehirao.vscode-markuplint",
+    "dbaeumer.vscode-eslint",
+    "stylelint.vscode-stylelint",
+    "esbenp.prettier-vscode",
+    "vue.volar",
+    "yoavbls.pretty-ts-errors",
+    "wayou.vscode-todo-highlight",
+    "usernamehw.errorlens"
+  ]
+}

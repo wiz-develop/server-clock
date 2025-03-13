@@ -1,4 +1,4 @@
-import { ClockData, ClockTickHandler, ServerClockOptions } from '../core/types';
+import { type ClockData, type ClockTickHandler, type ServerClockOptions } from '../core/types';
 
 /**
  * WebWorkerを使用した時計プロキシ
@@ -6,7 +6,7 @@ import { ClockData, ClockTickHandler, ServerClockOptions } from '../core/types';
  */
 export class WorkerProxy {
   private worker: Worker | null = null;
-  private tickHandlers: Set<ClockTickHandler> = new Set();
+  private tickHandlers = new Set<ClockTickHandler>();
   private options: ServerClockOptions;
   private workerUrl: string;
 
@@ -14,7 +14,7 @@ export class WorkerProxy {
    * @param options ServerClock オプション
    * @param workerUrl WebWorkerのURL (デフォルト: './worker.js')
    */
-  constructor(options: ServerClockOptions, workerUrl: string = './worker.js') {
+  constructor(options: ServerClockOptions, workerUrl = './worker.js') {
     this.options = options;
     this.workerUrl = workerUrl;
   }
@@ -45,7 +45,7 @@ export class WorkerProxy {
 
       // メッセージハンドラを設定
       this.worker.addEventListener('message', this.handleWorkerMessage);
-      this.worker.addEventListener('error', this.handleWorkerError);
+      this.worker.addEventListener('error', WorkerProxy.handleWorkerError);
 
       // Workerに開始メッセージを送信
       this.worker.postMessage({
@@ -71,7 +71,7 @@ export class WorkerProxy {
 
       // イベントリスナーを削除
       this.worker.removeEventListener('message', this.handleWorkerMessage);
-      this.worker.removeEventListener('error', this.handleWorkerError);
+      this.worker.removeEventListener('error', WorkerProxy.handleWorkerError);
 
       // Workerを終了
       this.worker.terminate();
@@ -96,7 +96,7 @@ export class WorkerProxy {
   /**
    * Workerからのエラーをハンドリングするためのメソッド
    */
-  private handleWorkerError = (event: ErrorEvent): void => {
+  private static handleWorkerError = (event: ErrorEvent): void => {
     console.error('[ServerClock] Worker error:', event);
   };
 

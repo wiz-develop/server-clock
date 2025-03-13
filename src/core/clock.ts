@@ -1,16 +1,16 @@
 import { fetchCalculateServerTimeOffset } from './sync';
 import {
-  CalculatedResult,
-  ClockData,
-  ClockTickHandler,
-  ServerClockOptions,
-  ServerUrls,
+  type CalculatedResult,
+  type ClockData,
+  type ClockTickHandler,
+  type ServerClockOptions,
+  type ServerUrls,
 } from './types';
 
 /**
  * 時刻を文字列に変換する
  */
-export const toDateStr = (t: Date): string => {
+export const toDateString = (t: Date): string => {
   const yy = t.getUTCFullYear();
   const MM = (t.getUTCMonth() + 1).toString().padStart(2, '0');
   const dd = t.getUTCDate().toString().padStart(2, '0');
@@ -32,9 +32,9 @@ export class CoreClock {
   private fallbackToLocal: boolean;
 
   private result: CalculatedResult = { status: 'pending', offset: 0 };
-  private clockloopTimer: number | NodeJS.Timeout | null = null;
-  private fetchloopTimer: number | NodeJS.Timeout | null = null;
-  private tickHandlers: Set<ClockTickHandler> = new Set();
+  private clockloopTimer: ReturnType<typeof setInterval> | null = null;
+  private fetchloopTimer: ReturnType<typeof setInterval> | null = null;
+  private tickHandlers = new Set<ClockTickHandler>();
 
   constructor(options: ServerClockOptions) {
     this.serverUrls = options.serverUrls;
@@ -47,7 +47,7 @@ export class CoreClock {
   /**
    * 時計を取得する
    */
-  public getClock(): ClockData {
+  private getClock(): ClockData {
     const now = new Date();
     const tzOffset = now.getTimezoneOffset() * 60_000;
 
@@ -65,10 +65,10 @@ export class CoreClock {
 
     return {
       ...times,
-      LOCAL_STR: toDateStr(times.LOCAL),
-      JST_STR: toDateStr(times.JST),
-      UTC_STR: toDateStr(times.UTC),
-      LOC_STR: toDateStr(times.LOC),
+      LOCAL_STR: toDateString(times.LOCAL),
+      JST_STR: toDateString(times.JST),
+      UTC_STR: toDateString(times.UTC),
+      LOC_STR: toDateString(times.LOC),
     };
   }
 
@@ -137,12 +137,12 @@ export class CoreClock {
    */
   public stop(): void {
     if (this.clockloopTimer) {
-      clearInterval(this.clockloopTimer as NodeJS.Timeout);
+      clearInterval(this.clockloopTimer);
       this.clockloopTimer = null;
     }
 
     if (this.fetchloopTimer) {
-      clearInterval(this.fetchloopTimer as NodeJS.Timeout);
+      clearInterval(this.fetchloopTimer);
       this.fetchloopTimer = null;
     }
   }
@@ -150,14 +150,14 @@ export class CoreClock {
   /**
    * 現在の時間オフセット値を取得
    */
-  public getTimeOffset(): number {
+  get getTimeOffset(): number {
     return this.result.offset;
   }
 
   /**
    * 現在の同期ステータスを取得
    */
-  public getStatus(): string {
+  get getStatus(): string {
     return this.result.status;
   }
 }

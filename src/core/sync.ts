@@ -1,13 +1,20 @@
-import { CalculatedResult, ProcessedServerResponse, ServerResponse, ServerUrls } from './types';
+import {
+  type CalculatedResult,
+  type ProcessedServerResponse,
+  type ServerResponse,
+  type ServerUrls,
+} from './types';
 
 /**
  * タイムアウト付きで fetch する
  */
-export const fetchWithTimeout = async (url: string, timeout: number = 3000): Promise<Response> =>
+export const fetchWithTimeout = async (url: string, timeout = 3000): Promise<Response> =>
   Promise.race([
-    fetch(`${url}`, { method: 'GET' }),
-    new Promise<Response>((_, reject) => {
-      setTimeout(() => reject(new Error('❌ fetch timeout')), timeout);
+    fetch(url, { method: 'GET' }),
+    new Promise<Response>((resolve, reject) => {
+      setTimeout(() => {
+        reject(new Error('❌ fetch timeout'));
+      }, timeout);
     }),
   ]);
 
@@ -58,9 +65,9 @@ export const calculateOffset = (
   }
 
   const { maxLb, minUb } = responses.reduce(
-    (acc, cur) => ({
-      maxLb: Math.max(acc.maxLb, cur.lb),
-      minUb: Math.min(acc.minUb, cur.ub),
+    (acc, current) => ({
+      maxLb: Math.max(acc.maxLb, current.lb),
+      minUb: Math.min(acc.minUb, current.ub),
     }),
     { maxLb: -Infinity, minUb: Infinity },
   );
@@ -82,7 +89,7 @@ export const calculateOffset = (
  */
 export const fetchCalculateServerTimeOffset = async (
   serverUrls: ServerUrls,
-  fetchTimeout: number = 3000,
+  fetchTimeout: number,
   currentResult?: CalculatedResult,
 ): Promise<CalculatedResult> => {
   // NOTE: オフライン時はサーバー時刻を取得しても無駄なので、サーバーリストを空にする
@@ -93,13 +100,13 @@ export const fetchCalculateServerTimeOffset = async (
   const fetchResponses = await Promise.allSettled(
     serverUrls.map(async (server) => {
       const itMs = Date.now();
-      const response = await fetchWithTimeout(server, fetchTimeout).catch((error) => {
-        console.error(`[ServerClock] ❌ Failed to fetch data from '${server}': ${error}`);
+      const response = await fetchWithTimeout(server, fetchTimeout).catch((error: unknown) => {
+        console.error(`[ServerClock] ❌ Failed to fetch data from '${server}'`, error);
         throw error;
       });
       const rtMs = Date.now();
 
-      const data = await response.json();
+      const data = (await response.json()) as unknown;
       if (!isValidServerResult(data)) {
         console.error(`[ServerClock] ❌ Invalid server response from '${server}'`);
         throw new Error(`Invalid server response from '${server}'`);
@@ -111,9 +118,10 @@ export const fetchCalculateServerTimeOffset = async (
 
   const succeedResponses = fetchResponses
     .filter(
-      (res): res is PromiseFulfilledResult<ProcessedServerResponse> => res.status === 'fulfilled',
+      (response): response is PromiseFulfilledResult<ProcessedServerResponse> =>
+        response.status === 'fulfilled',
     )
-    .map((res) => res.value);
+    .map((response) => response.value);
 
   return calculateOffset(succeedResponses, serverUrls);
 };

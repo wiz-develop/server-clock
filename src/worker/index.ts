@@ -2,13 +2,19 @@
  * WebWorker として動作する時計実装
  * このファイルはWebWorker環境で実行されることを想定しています
  */
-import { toDateStr } from '../core/clock';
+import { toDateString } from '../core/clock';
 import { fetchCalculateServerTimeOffset } from '../core/sync';
-import { CalculatedResult, ClockData, ServerUrls } from '../core/types';
+import { type CalculatedResult, type ClockData, type ServerUrls } from '../core/types';
+
+/**
+ * このファイルは、Web Worker として動作するファイルです。
+ * Background から server-time api にアクセスするための処理を記述します。
+ */
+declare let self: DedicatedWorkerGlobalScope | undefined;
 
 // WebWorker環境にあることを確認
-if (typeof self === 'undefined') {
-  throw new Error('This script must be executed in a WebWorker environment');
+if (self === undefined) {
+  throw new TypeError('This script must be executed in a WebWorker environment');
 }
 
 // グローバル定数
@@ -17,8 +23,8 @@ const FETCH_TIMEOUT = 3000; // HTTP timeout is 3 seconds
 
 // 状態管理
 let result: CalculatedResult = { status: 'pending', offset: 0 };
-let clockloopTimer: number | ReturnType<typeof setInterval> | null = null;
-let fetchloopTimer: number | ReturnType<typeof setInterval> | null = null;
+let clockloopTimer: number | null = null;
+let fetchloopTimer: number | null = null;
 
 /**
  * 時計を取得する
@@ -40,10 +46,10 @@ const getClock = (): ClockData => {
 
   return {
     ...times,
-    LOCAL_STR: toDateStr(times.LOCAL),
-    JST_STR: toDateStr(times.JST),
-    UTC_STR: toDateStr(times.UTC),
-    LOC_STR: toDateStr(times.LOC),
+    LOCAL_STR: toDateString(times.LOCAL),
+    JST_STR: toDateString(times.JST),
+    UTC_STR: toDateString(times.UTC),
+    LOC_STR: toDateString(times.LOC),
   };
 };
 
@@ -93,7 +99,7 @@ const stopClock = (): void => {
 };
 
 // メッセージハンドラ
-self.addEventListener('message', (event) => {
+self.addEventListener('message', async (event) => {
   console.info('[ServerClock Worker] Message received:', event.data);
 
   switch (event.data.type) {
@@ -102,7 +108,7 @@ self.addEventListener('message', (event) => {
         console.error('[ServerClock Worker] serverList is required');
         break;
       }
-      startClock(event.data.serverList, event.data.fetchInterval);
+      await startClock(event.data.serverList, event.data.fetchInterval);
       break;
     case 'stop':
       stopClock();

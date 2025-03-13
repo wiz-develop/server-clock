@@ -1,0 +1,44 @@
+{
+  "editor.bracketPairColorization.enabled": true,
+  "editor.formatOnPaste": false,
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "never",
+    "source.fixAll.eslint": "explicit",
+    "source.fixAll.stylelint": "explicit"
+  },
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  // "editor.tabSize": 2,
+  "editor.rulers": [100],
+  // ESLint settings
+  // "eslint.workingDirectories": [{ "pattern": "./src" }],
+  // "eslint.options": {
+  //   "overrideConfigFile": "./eslint.config.mjs"
+  // },
+  "eslint.enable": true,
+  "eslint.validate": ["js", "ts", "vue"],
+  // Stylelint settings
+  "css.validate": false,
+  "less.validate": false,
+  "scss.validate": false,
+  // "stylelint.configFile": "./stylelint.config.mjs","
+  "stylelint.enable": true,
+  "stylelint.validate": ["css", "scss", "vue"],
+  // prettier settings
+  "prettier.enable": true,
+  "prettier.configPath": "./prettier.config.js",
+  "prettier.ignorePath": "./.prettierignore",
+  // Markuplint settings
+  "markuplint.enable": true,
+  // highlight settings
+  "todohighlight.defaultStyle": {
+    "border": "1px solid #FFF",
+    "borderRadius": "3px"
+  },
+  "todohighlight.keywords": [
+    { "text": "BUG:", "color": "#FFFFFF", "backgroundColor": "#DC3545" },
+    { "text": "NOTE:", "color": "#FFFFFF", "backgroundColor": "#98C379" },
+    { "text": "HACK:", "color": "#FFFFFF", "backgroundColor": "#C678DD" },
+    { "text": "DEBUG:", "color": "#FFFFFF", "backgroundColor": "#61AFEF" }
+  ]
+}
