@@ -38,9 +38,11 @@ const inlineWorkerPlugin = () => ({
           .replaceAll('${', '\\${');
 
         // WORKER_CODEプレースホルダをWebWorkerコードで置き換え
+        // この正規表現を修正して、テンプレートリテラル内の任意の内容にマッチするようにする
+        const workerCodeRegex = /(const\s+WORKER_CODE\s*=\s*`)[\S\s]*?(`)/;
         bundleFile.code = bundleFile.code.replace(
-          /const\s+WORKER_CODE\s*=\s*`[^`]*`/,
-          `const WORKER_CODE = \`${escapedWorkerCode}\``,
+          workerCodeRegex,
+          (match, p1, p2) => `${p1}${escapedWorkerCode}${p2}`,
         );
 
         // ファイルに書き戻す
