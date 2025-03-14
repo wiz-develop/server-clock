@@ -45,7 +45,51 @@ const inlineWorkerPlugin = () => ({
 });
 
 // 共通設定
-const commonPlugins = [resolve(), commonjs(), typescript({ tsconfig: './tsconfig.json' })];
+const commonPlugins = [
+  resolve(),
+  commonjs(),
+  typescript({
+    tsconfig: './tsconfig.json',
+    sourceMap: false, // TypeScriptのソースマップ生成も無効化
+  }),
+];
+
+// 難読化・最小化のための設定（バンドルサイズを極力削減）
+const minifyOptions = {
+  compress: {
+    pure_funcs: [],
+    drop_console: true,
+    drop_debugger: true,
+    passes: 3, // 最適化パスを増やす
+    toplevel: true, // トップレベルの変数と関数も最適化
+    unsafe: true, // 「安全でない」最適化を有効化
+    unsafe_arrows: true,
+    unsafe_comps: true,
+    unsafe_Function: true,
+    unsafe_math: true,
+    unsafe_methods: true,
+    unsafe_proto: true,
+    unsafe_regexp: true,
+    pure_getters: true, // getter呼び出しを純粋と見なす
+    collapse_vars: true,
+    booleans: true,
+    if_return: true,
+    inline: true,
+    dead_code: true,
+  },
+  mangle: {
+    reserved: ['WORKER_CODE'],
+    toplevel: true, // トップレベルの変数名も難読化
+    properties: {
+      regex: /^_/, // アンダースコアで始まるプロパティ名を難読化
+    },
+  },
+  format: {
+    comments: false,
+    ascii_only: true, // ASCII文字のみ使用
+    wrap_iife: true, // IIFEをラップして安全に
+  },
+};
 
 // ワーカーを最初にビルドして、他のバンドルで利用できるようにする
 const buildOrder = [
@@ -55,9 +99,9 @@ const buildOrder = [
     output: {
       file: 'dist/worker.js',
       format: 'iife', // 即時実行関数式
-      sourcemap: true,
+      sourcemap: false,
     },
-    plugins: commonPlugins,
+    plugins: [...commonPlugins, terser(minifyOptions)],
   },
   // ESモジュール版 (modern JS environments)
   {
@@ -65,9 +109,9 @@ const buildOrder = [
     output: {
       file: 'dist/index.esm.js',
       format: 'esm',
-      sourcemap: true,
+      sourcemap: false,
     },
-    plugins: [...commonPlugins, inlineWorkerPlugin()],
+    plugins: [...commonPlugins, inlineWorkerPlugin(), terser(minifyOptions)],
   },
   // ブラウザ用バンドル (UMD - for <script> tags)
   {
@@ -76,10 +120,10 @@ const buildOrder = [
       file: 'dist/bundle.js',
       format: 'umd',
       name: 'WizDevelopServerClock',
-      sourcemap: true,
+      sourcemap: false,
       exports: 'named',
     },
-    plugins: [...commonPlugins, inlineWorkerPlugin()],
+    plugins: [...commonPlugins, inlineWorkerPlugin(), terser(minifyOptions)],
   },
   // ブラウザ用バンドル (最小化版) - 通常版を最小化
   {
@@ -88,7 +132,7 @@ const buildOrder = [
       file: 'dist/bundle.min.js',
       format: 'umd',
       name: 'WizDevelopServerClock',
-      sourcemap: true,
+      sourcemap: false,
       exports: 'named',
     },
     plugins: [
@@ -96,16 +140,7 @@ const buildOrder = [
       // コンパイル前にWorkerコードをインライン化
       inlineWorkerPlugin(),
       // その後minify
-      terser({
-        compress: {
-          // 'WORKER_CODE'に関連する行を削除しないようにする
-          pure_funcs: [],
-          drop_console: false,
-        },
-        mangle: {
-          reserved: ['WORKER_CODE'],
-        },
-      }),
+      terser(minifyOptions),
     ],
   },
 ];
