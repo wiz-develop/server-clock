@@ -36,15 +36,12 @@ pnpm add @wiz-develop/server-clock
 ### モジュールとして使用する場合
 
 ```javascript
-import ServerClock from '@wiz-develop/server-clock';
+import { ServerClock } from '@wiz-develop/server-clock';
 
 // 時計を初期化
 const clock = new ServerClock({
   serverUrls: ['https://example.com/time-api'], // 時刻配信サーバーのURLリスト
-  fetchInterval: 180000, // サーバー時間取得間隔(ms) - デフォルト3分
-  clockInterval: 10, // 時計の更新間隔(ms) - デフォルト10ms
-  fetchTimeout: 3000, // HTTPリクエストのタイムアウト(ms) - デフォルト3秒
-  fallbackToLocal: true, // サーバー接続失敗時にローカル時間を使用
+  fetchInterval: 18_0000, // サーバー時間取得間隔(ms)
 });
 
 // 時計を開始
@@ -67,23 +64,14 @@ clock.onTick((clockData) => {
 
 ```html
 <!-- ライブラリを読み込み - CDNもしくはローカルファイルから -->
-<script src="path/to/@wiz-develop/server-clock/dist/bundle.min.js"></script>
-
-<!-- Worker用のファイルも配置してください -->
-<!-- 注: workerファイルはscriptタグで読み込まないでください。ServerClockがロードします -->
-<!-- path/to/@wiz-develop/server-clock/dist/worker.js を適切な場所に配置 -->
+<script src="https://unpkg.com/@wiz-develop/server-clock@1.0.4/dist/bundle.min.js"></script>
 
 <script>
   // グローバル変数として利用可能
-  const clock = new WizDevelopServerClock(
-    {
-      serverUrls: ['https://example.com/time-api'],
-      // オプションで Worker の URL を指定できます (デフォルトは './worker.js')
-      // この場合は worker.js が現在のHTMLファイルと同じディレクトリにある必要があります
-    },
-    false,
-    './path/to/worker.js',
-  );
+  const clock = new WizDevelopServerClock.ServerClock({
+    serverUrls: ['https://example.com/time-api'], // 時刻配信サーバーのURLリスト
+    fetchInterval: 18_0000, // サーバー時間取得間隔(ms)
+  });
 
   clock.start();
 
@@ -97,12 +85,13 @@ clock.onTick((clockData) => {
 
 ```html
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="path/to/@wiz-develop/server-clock/dist/bundle.min.js"></script>
+<script src="https://unpkg.com/@wiz-develop/server-clock@1.0.4/dist/bundle.min.js"></script>
 
 <script>
   $(function () {
-    const clock = new WizDevelopServerClock({
-      serverUrls: ['https://example.com/time-api'],
+    const clock = new WizDevelopServerClock.ServerClock({
+      serverUrls: ['https://example.com/time-api'], // 時刻配信サーバーのURLリスト
+      fetchInterval: 18_0000, // サーバー時間取得間隔(ms)
     });
 
     clock.start();
