@@ -1,3 +1,5 @@
+/* eslint-env browser */
+/* eslint-disable n/no-unsupported-features/node-builtins */
 /**
  * インラインWebWorkerを作成するためのユーティリティ関数
  *
