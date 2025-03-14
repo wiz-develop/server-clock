@@ -2,6 +2,7 @@
  * WebWorker として動作する時計実装
  * このファイルはWebWorker環境で実行されることを想定しています
  */
+import { CLOCK_INTERVAL, FETCH_TIMEOUT } from '../core/clock';
 import { fetchCalculateServerTimeOffset, getClockData } from '../core/sync';
 import { type CalculatedResult, type ServerUrls } from '../core/types';
 
@@ -15,10 +16,6 @@ declare let self: DedicatedWorkerGlobalScope | undefined;
 if (self === undefined) {
   throw new TypeError('This script must be executed in a WebWorker environment');
 }
-
-// グローバル定数
-const CLOCK_INTERVAL = 10; // Refresh clock display every 10ms
-const FETCH_TIMEOUT = 3000; // HTTP timeout is 3 seconds
 
 // 状態管理
 let result: CalculatedResult = { status: 'pending', offset: 0 };

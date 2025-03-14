@@ -6,14 +6,14 @@ import {
   type ServerUrls,
 } from './types';
 
+export const FETCH_INTERVAL = 180000; // デフォルト3分
+export const CLOCK_INTERVAL = 100; // デフォルト100ms
+export const FETCH_TIMEOUT = 3000; // デフォルト3秒
+
 /**
  * サーバー時間同期時計のコア実装
  */
 export class CoreClock {
-  public static FETCH_INTERVAL = 180000 as const; // デフォルト3分
-  public static CLOCK_INTERVAL = 100 as const; // デフォルト100ms
-  public static FETCH_TIMEOUT = 3000 as const; // デフォルト3秒
-
   private serverUrls: ServerUrls;
   private fetchInterval: number;
   private clockInterval: number;
@@ -27,9 +27,9 @@ export class CoreClock {
 
   constructor(options: ServerClockOptions) {
     this.serverUrls = options.serverUrls;
-    this.fetchInterval = options.fetchInterval ?? CoreClock.FETCH_INTERVAL;
-    this.clockInterval = options.clockInterval ?? CoreClock.CLOCK_INTERVAL;
-    this.fetchTimeout = options.fetchTimeout ?? CoreClock.FETCH_TIMEOUT;
+    this.fetchInterval = options.fetchInterval ?? FETCH_INTERVAL;
+    this.clockInterval = options.clockInterval ?? CLOCK_INTERVAL;
+    this.fetchTimeout = options.fetchTimeout ?? FETCH_TIMEOUT;
     this.fallbackToLocal = options.fallbackToLocal ?? true; // デフォルトtrueでローカル時間にフォールバック
   }
 

@@ -1,4 +1,4 @@
-import { CoreClock } from '../core/clock';
+import { CLOCK_INTERVAL, CoreClock, FETCH_INTERVAL, FETCH_TIMEOUT } from '../core/clock';
 import { type ClockData, type ClockTickHandler, type ServerClockOptions } from '../core/types';
 import { WorkerProxy } from './workerProxy';
 
@@ -19,9 +19,9 @@ export class ServerClock {
   constructor(options: ServerClockOptions, workerUrl = './worker.js') {
     this.options = {
       ...options,
-      fetchInterval: options.fetchInterval ?? CoreClock.FETCH_INTERVAL,
-      clockInterval: options.clockInterval ?? CoreClock.CLOCK_INTERVAL,
-      fetchTimeout: options.fetchTimeout ?? CoreClock.FETCH_TIMEOUT,
+      fetchInterval: options.fetchInterval ?? FETCH_INTERVAL,
+      clockInterval: options.clockInterval ?? CLOCK_INTERVAL,
+      fetchTimeout: options.fetchTimeout ?? FETCH_TIMEOUT,
       fallbackToLocal: options.fallbackToLocal ?? true,
     };
 
