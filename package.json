@@ -1,6 +1,6 @@
 {
   "name": "@wiz-develop/server-clock",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Server-synchronized clock implementation for browsers with WebWorker support",
   "type": "module",
   "main": "dist/bundle.js",
