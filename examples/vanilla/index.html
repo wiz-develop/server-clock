@@ -153,7 +153,7 @@
     </div>
 
     <!-- ライブラリを読み込み -->
-    <script src="../../dist/bundle.js" defer></script>
+    <script src="../../dist/bundle.min.js" defer></script>
 
     <script>
       // ダミーの時刻配信サーバーを使用するためのFetchをインターセプト
@@ -204,21 +204,11 @@
           return;
         }
 
-        // file://プロトコルの場合は強制的にメインスレッドモードで実行
-        const forceSingleThread = isFileProtocol;
-
-        // worker.jsのパスを正確に指定（相対パス解決の問題を回避）
-        const workerUrl = new URL('../../dist/worker.js', window.location.href).href;
-
-        clock = new WizDevelopServerClock.ServerClock(
-          {
-            serverUrls: [serverUrl],
-            fetchInterval: 30000, // 30秒ごとに更新（デモ用）
-            clockInterval: 100, // 100msごとに更新（デモ用）
-          },
-          forceSingleThread,
-          workerUrl, // 明示的にworker.jsのパスを指定
-        );
+        clock = new WizDevelopServerClock.ServerClock({
+          serverUrls: [serverUrl],
+          fetchInterval: 30000, // 30秒ごとに更新（デモ用）
+          clockInterval: 100, // 100msごとに更新（デモ用）
+        });
 
         // WebWorkerモードかどうかを表示
         if (isFileProtocol) {

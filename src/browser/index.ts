@@ -9,28 +9,23 @@ import { WorkerProxy } from './workerProxy';
 export class ServerClock {
   private implementation: CoreClock | WorkerProxy;
   private options: ServerClockOptions;
-  private useWorker: boolean;
   private lastTickData: ClockData | null = null;
   private tickHandlers = new Set<ClockTickHandler>();
 
   /**
    * @param options サーバー時計のオプション
-   * @param forceSingleThread WebWorkerが利用可能でも強制的にシングルスレッドで実行する場合はtrue
    * @param workerUrl WebWorkerのURL (デフォルト: './worker.js')
    */
-  constructor(options: ServerClockOptions, forceSingleThread = false, workerUrl = './worker.js') {
+  constructor(options: ServerClockOptions, workerUrl = './worker.js') {
     this.options = {
       ...options,
-      fetchInterval: options.fetchInterval ?? 1000 * 60 * 3,
-      clockInterval: options.clockInterval ?? 10,
-      fetchTimeout: options.fetchTimeout ?? 3000,
+      fetchInterval: options.fetchInterval ?? CoreClock.FETCH_INTERVAL,
+      clockInterval: options.clockInterval ?? CoreClock.CLOCK_INTERVAL,
+      fetchTimeout: options.fetchTimeout ?? CoreClock.FETCH_TIMEOUT,
       fallbackToLocal: options.fallbackToLocal ?? true,
     };
 
-    // WebWorkerが利用可能で、強制シングルスレッドでない場合はWorkerを使用
-    this.useWorker = !forceSingleThread && WorkerProxy.isWorkerAvailable();
-
-    this.implementation = this.useWorker
+    this.implementation = ServerClock.isWorkerAvailable()
       ? new WorkerProxy(this.options, workerUrl)
       : new CoreClock(this.options);
 
@@ -80,7 +75,7 @@ export class ServerClock {
    * 時計を開始する
    */
   public async start(): Promise<void> {
-    if (this.useWorker) {
+    if (ServerClock.isWorkerAvailable()) {
       (this.implementation as WorkerProxy).start();
     } else {
       await (this.implementation as CoreClock).start();
@@ -95,10 +90,14 @@ export class ServerClock {
   }
 
   /**
-   * 時計がWebWorkerモードで動作しているかどうか
+   * WebWorkerが利用可能かどうかをチェック
    */
+  public static isWorkerAvailable(): boolean {
+    return typeof Worker !== 'undefined' && window.location.protocol !== 'file:';
+  }
+
   public isUsingWorker(): boolean {
-    return this.useWorker;
+    return this.implementation instanceof WorkerProxy;
   }
 }
 

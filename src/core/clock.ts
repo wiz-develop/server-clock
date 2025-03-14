@@ -10,6 +10,10 @@ import {
  * サーバー時間同期時計のコア実装
  */
 export class CoreClock {
+  public static FETCH_INTERVAL = 180_000 as const; // デフォルト3分
+  public static CLOCK_INTERVAL = 100 as const; // デフォルト100ms
+  public static FETCH_TIMEOUT = 3000 as const; // デフォルト3秒
+
   private serverUrls: ServerUrls;
   private fetchInterval: number;
   private clockInterval: number;
@@ -23,9 +27,9 @@ export class CoreClock {
 
   constructor(options: ServerClockOptions) {
     this.serverUrls = options.serverUrls;
-    this.fetchInterval = options.fetchInterval ?? 1000 * 60 * 3; // デフォルト3分
-    this.clockInterval = options.clockInterval ?? 10; // デフォルト10ms
-    this.fetchTimeout = options.fetchTimeout ?? 3000; // デフォルト3秒
+    this.fetchInterval = options.fetchInterval ?? CoreClock.FETCH_INTERVAL;
+    this.clockInterval = options.clockInterval ?? CoreClock.CLOCK_INTERVAL;
+    this.fetchTimeout = options.fetchTimeout ?? CoreClock.FETCH_TIMEOUT;
     this.fallbackToLocal = options.fallbackToLocal ?? true; // デフォルトtrueでローカル時間にフォールバック
   }
 
@@ -102,19 +106,5 @@ export class CoreClock {
       clearInterval(this.fetchloopTimer);
       this.fetchloopTimer = null;
     }
-  }
-
-  /**
-   * 現在の時間オフセット値を取得
-   */
-  get getTimeOffset(): number {
-    return this.result.offset;
-  }
-
-  /**
-   * 現在の同期ステータスを取得
-   */
-  get getStatus(): string {
-    return this.result.status;
   }
 }

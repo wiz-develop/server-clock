@@ -98,11 +98,4 @@ export class WorkerProxy {
   private static handleWorkerError = (event: ErrorEvent): void => {
     console.error('[ServerClock] Worker error:', event);
   };
-
-  /**
-   * WebWorkerが利用可能かどうかをチェック
-   */
-  public static isWorkerAvailable(): boolean {
-    return typeof Worker !== 'undefined';
-  }
 }
