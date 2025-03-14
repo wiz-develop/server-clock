@@ -64,7 +64,7 @@ clock.onTick((clockData) => {
 
 ```html
 <!-- ライブラリを読み込み - CDNもしくはローカルファイルから -->
-<script src="https://unpkg.com/@wiz-develop/server-clock@1.0.4/dist/bundle.min.js"></script>
+<script src="https://unpkg.com/@wiz-develop/server-clock@1.0.x/dist/bundle.min.js"></script>
 
 <script>
   // グローバル変数として利用可能
@@ -85,7 +85,7 @@ clock.onTick((clockData) => {
 
 ```html
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://unpkg.com/@wiz-develop/server-clock@1.0.4/dist/bundle.min.js"></script>
+<script src="https://unpkg.com/@wiz-develop/server-clock@1.0.x/dist/bundle.min.js"></script>
 
 <script>
   $(function () {
