@@ -146,7 +146,7 @@ export const fetchCalculateServerTimeOffset = async (
  */
 export const getClockData = (result: CalculatedResult, clockInterval: number): ClockData => {
   const now = new Date();
-  const tzOffset = now.getTimezoneOffset() * 60_000;
+  const tzOffset = now.getTimezoneOffset() * 60000;
 
   const utcMs = now.getTime() + result.offset + clockInterval / 2;
 
@@ -154,7 +154,7 @@ export const getClockData = (result: CalculatedResult, clockInterval: number): C
     status: result.status,
     offset: Math.round((result.offset / 1000) * 10) / 10,
     LOCAL: new Date(now.getTime() - tzOffset),
-    JST: new Date(utcMs + 9 * 3_600_000),
+    JST: new Date(utcMs + 9 * 3600000),
     UTC: new Date(utcMs),
     LOC: new Date(utcMs - tzOffset),
   };

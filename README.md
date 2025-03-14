@@ -41,7 +41,7 @@ import { ServerClock } from '@wiz-develop/server-clock';
 // 時計を初期化
 const clock = new ServerClock({
   serverUrls: ['https://example.com/time-api'], // 時刻配信サーバーのURLリスト
-  fetchInterval: 18_0000, // サーバー時間取得間隔(ms)
+  fetchInterval: 180000, // サーバー時間取得間隔(ms)
 });
 
 // 時計を開始
@@ -70,7 +70,7 @@ clock.onTick((clockData) => {
   // グローバル変数として利用可能
   const clock = new WizDevelopServerClock.ServerClock({
     serverUrls: ['https://example.com/time-api'], // 時刻配信サーバーのURLリスト
-    fetchInterval: 18_0000, // サーバー時間取得間隔(ms)
+    fetchInterval: 180000, // サーバー時間取得間隔(ms)
   });
 
   clock.start();
@@ -91,7 +91,7 @@ clock.onTick((clockData) => {
   $(function () {
     const clock = new WizDevelopServerClock.ServerClock({
       serverUrls: ['https://example.com/time-api'], // 時刻配信サーバーのURLリスト
-      fetchInterval: 18_0000, // サーバー時間取得間隔(ms)
+      fetchInterval: 180000, // サーバー時間取得間隔(ms)
     });
 
     clock.start();

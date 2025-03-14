@@ -10,7 +10,7 @@ import {
  * サーバー時間同期時計のコア実装
  */
 export class CoreClock {
-  public static FETCH_INTERVAL = 180_000 as const; // デフォルト3分
+  public static FETCH_INTERVAL = 180000 as const; // デフォルト3分
   public static CLOCK_INTERVAL = 100 as const; // デフォルト100ms
   public static FETCH_TIMEOUT = 3000 as const; // デフォルト3秒
 

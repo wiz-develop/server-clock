@@ -18,8 +18,9 @@ export default [
 
   {
     rules: {
-      'unicorn/expiring-todo-comments': 'off',
+      'unicorn/expiring-todo-comments': ['off'],
       'import/no-default-export': ['off'],
+      'unicorn/numeric-separators-style': ['off'],
     },
   },
 
